@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -46,8 +47,9 @@
 
   <main class="login-main">
     <div class="login-card">
-      <h1>Welcome back</h1>
-      <p class="sub">Sign in to check today's earnings and cash out.</p>
+      <h1 id="form-title">Welcome back</h1>
+      <p class="sub" id="form-sub">Sign in to check today's earnings and cash out.</p>
+      <p id="form-message" style="display:none;margin-top:.9rem;padding:.7em 1em;border-radius:10px;font-size:.85rem;"></p>
 
       <form id="login-form" novalidate>
         <div class="field">
@@ -66,23 +68,84 @@
           <a href="#">Forgot password?</a>
         </div>
 
-        <button type="submit" class="btn3d block">Sign in</button>
+        <button type="submit" class="btn3d block" id="submit-btn">Sign in</button>
       </form>
 
       <div class="divider">or continue with</div>
       <button type="button" class="btn3d ghost block">Continue with Google</button>
 
-      <p class="signup-line">New here? <a href="home.html">Create a free account →</a></p>
+      <p class="signup-line" id="toggle-line">New here? <a href="#" id="toggle-mode">Create a free account →</a></p>
     </div>
   </main>
 
 </div>
 
 <script src="backdrop.js"></script>
+<script src="supabase-client.js"></script>
 <script>
-  document.getElementById("login-form").addEventListener("submit", function (e) {
+  let mode = "signin"; // or "signup"
+
+  const form = document.getElementById("login-form");
+  const submitBtn = document.getElementById("submit-btn");
+  const title = document.getElementById("form-title");
+  const sub = document.getElementById("form-sub");
+  const toggleLine = document.getElementById("toggle-line");
+  const messageEl = document.getElementById("form-message");
+
+  function showMessage(text, isError) {
+    messageEl.textContent = text;
+    messageEl.style.display = "block";
+    messageEl.style.background = isError ? "rgba(224,90,90,.12)" : "rgba(60,203,127,.12)";
+    messageEl.style.color = isError ? "#E58F8F" : "#8CE6B0";
+    messageEl.style.border = "1px solid " + (isError ? "rgba(224,90,90,.35)" : "rgba(60,203,127,.35)");
+  }
+
+  document.getElementById("toggle-mode").addEventListener("click", function (e) {
     e.preventDefault();
-    window.location.href = "home.html";
+    mode = mode === "signin" ? "signup" : "signin";
+    if (mode === "signup") {
+      title.textContent = "Create your account";
+      sub.textContent = "Start earning in under a minute — it's free.";
+      submitBtn.textContent = "Create account";
+      toggleLine.innerHTML = 'Already have an account? <a href="#" id="toggle-mode">Sign in →</a>';
+    } else {
+      title.textContent = "Welcome back";
+      sub.textContent = "Sign in to check today's earnings and cash out.";
+      submitBtn.textContent = "Sign in";
+      toggleLine.innerHTML = 'New here? <a href="#" id="toggle-mode">Create a free account →</a>';
+    }
+    // re-bind since innerHTML replaced the link
+    document.getElementById("toggle-mode").addEventListener("click", arguments.callee);
+    messageEl.style.display = "none";
+  });
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = ".7";
+
+    if (mode === "signup") {
+      const { data, error } = await signUp(email, password);
+      if (error) {
+        showMessage(error.message, true);
+      } else if (data?.user && !data.session) {
+        showMessage("Account created! Check your email to confirm, then sign in.", false);
+      } else {
+        window.location.href = "home.html";
+      }
+    } else {
+      const { error } = await signIn(email, password);
+      if (error) {
+        showMessage(error.message, true);
+      } else {
+        window.location.href = "home.html";
+      }
+    }
+
+    submitBtn.disabled = false;
+    submitBtn.style.opacity = "1";
   });
 </script>
 </body>

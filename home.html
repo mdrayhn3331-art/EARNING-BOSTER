@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -25,7 +26,7 @@
     <a href="#stats">Numbers</a>
     <a href="#start">Get started</a>
   </nav>
-  <div class="header-actions">
+  <div class="header-actions" id="header-actions">
     <a href="index.html" style="text-decoration:none;font-size:.9rem;color:var(--paper-dim);">Sign in</a>
     <button class="btn3d sm brass" onclick="location.href='index.html'">Join free</button>
   </div>
@@ -46,11 +47,11 @@
   </div>
 
   <div class="ticker-card">
-    <div class="label">Your balance</div>
-    <div class="amount">$<span id="ticker-amount">128.40</span> <span>USD</span></div>
+    <div class="label" id="ticker-label">Your balance</div>
+    <div class="amount">$<span id="ticker-amount">0.00</span> <span>USD</span></div>
     <div class="ticker-row">
       <div>
-        <strong id="ticker-today">$6.35</strong>
+        <strong id="ticker-today">$0.00</strong>
         <span>earned today</span>
       </div>
       <div>
@@ -62,6 +63,7 @@
         <span>payout speed</span>
       </div>
     </div>
+    <button class="btn3d sm block" id="demo-task-btn" style="margin-top:1.4rem;">Complete a task (+$0.25)</button>
   </div>
 </section>
 
@@ -104,20 +106,45 @@
 </footer>
 
 <script src="backdrop.js"></script>
+<script src="supabase-client.js"></script>
 <script>
-  // Gentle live-ticking balance to reinforce the "live earnings" feel.
-  (function () {
+  (async function () {
     const amountEl = document.getElementById("ticker-amount");
     const todayEl = document.getElementById("ticker-today");
-    let balance = 128.40;
-    let today = 6.35;
-    setInterval(function () {
-      const bump = Math.random() * 0.05;
-      balance += bump;
-      today += bump;
-      amountEl.textContent = balance.toFixed(2);
-      todayEl.textContent = "$" + today.toFixed(2);
-    }, 2600);
+    const headerActions = document.getElementById("header-actions");
+    const demoBtn = document.getElementById("demo-task-btn");
+
+    // NOTE: until supabase-client.js has real SUPABASE_URL / SUPABASE_ANON_KEY
+    // filled in, requireLogin() will fail quietly — fill those in first.
+    const user = await requireLogin();
+    if (!user) return; // requireLogin already redirects to index.html
+
+    // swap header to a signed-in state
+    headerActions.innerHTML =
+      '<span style="font-size:.85rem;color:var(--paper-dim);">' + user.email + '</span>' +
+      '<button class="btn3d sm ghost" id="signout-btn">Sign out</button>';
+    document.getElementById("signout-btn").addEventListener("click", async function () {
+      await signOut();
+      window.location.href = "index.html";
+    });
+
+    async function refreshBalance() {
+      const { data } = await getProfile(user.id);
+      if (data) {
+        amountEl.textContent = Number(data.balance).toFixed(2);
+        todayEl.textContent = "$" + Number(data.earned_today).toFixed(2);
+      }
+    }
+    await refreshBalance();
+
+    // Demo button: stands in for "user completed an offerwall task".
+    // Wire this to your real task-completion callback later.
+    demoBtn.addEventListener("click", async function () {
+      demoBtn.disabled = true;
+      await addEarning(user.id, 0.25, "demo-task");
+      await refreshBalance();
+      demoBtn.disabled = false;
+    });
   })();
 </script>
 </body>
