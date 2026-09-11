@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Earning Booster — Turn spare minutes into steady income</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="backdrop">
+  <canvas id="backdrop-canvas"></canvas>
+  <div class="grain"></div>
+</div>
+
+<header class="site-header">
+  <div class="brandmark">
+    <div class="coin">₿</div>
+    <span class="brand-name">Earning Booster</span>
+  </div>
+  <nav>
+    <a href="#how">How it works</a>
+    <a href="#stats">Numbers</a>
+    <a href="#start">Get started</a>
+  </nav>
+  <div class="header-actions">
+    <a href="index.html" style="text-decoration:none;font-size:.9rem;color:var(--paper-dim);">Sign in</a>
+    <button class="btn3d sm brass" onclick="location.href='index.html'">Join free</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div>
+    <p class="eyebrow-free">Micro-tasks that actually pay</p>
+    <h1>Turn spare minutes into <em>steady income.</em></h1>
+    <p class="lead">
+      Complete short surveys, app trials, and small tasks from your phone.
+      Track every cent in real time and cash out the same day you hit your goal.
+    </p>
+    <div class="hero-cta">
+      <button class="btn3d" onclick="location.href='index.html'">Start earning today</button>
+      <button class="btn3d ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">See how it works</button>
+    </div>
+  </div>
+
+  <div class="ticker-card">
+    <div class="label">Your balance</div>
+    <div class="amount">$<span id="ticker-amount">128.40</span> <span>USD</span></div>
+    <div class="ticker-row">
+      <div>
+        <strong id="ticker-today">$6.35</strong>
+        <span>earned today</span>
+      </div>
+      <div>
+        <strong>3 mins</strong>
+        <span>avg. task time</span>
+      </div>
+      <div>
+        <strong>Instant</strong>
+        <span>payout speed</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="stat-strip" id="stats">
+  <div><strong>$2.4M+</strong><span>paid to members since launch</span></div>
+  <div><strong>180,000</strong><span>people earning monthly</span></div>
+  <div><strong>92%</strong><span>cash out within 24 hours</span></div>
+  <div><strong>4.8 / 5</strong><span>average member rating</span></div>
+</div>
+
+<section class="section" id="how">
+  <h2>Three steps between you and your first payout</h2>
+  <div class="path-list">
+    <div class="path-card">
+      <div class="num">01</div>
+      <h3>Pick a task</h3>
+      <p>Browse surveys, app trials, and quick offers matched to your profile. Each one shows its payout and time estimate up front.</p>
+    </div>
+    <div class="path-card">
+      <div class="num">02</div>
+      <h3>Complete it</h3>
+      <p>Most tasks take two to five minutes. Your progress and earnings update live on the dashboard as you go.</p>
+    </div>
+    <div class="path-card">
+      <div class="num">03</div>
+      <h3>Cash out</h3>
+      <p>Move your balance to PayPal, bank transfer, or gift cards once you cross the $10 minimum. No waiting period.</p>
+    </div>
+  </div>
+</section>
+
+<div class="cta-band" id="start">
+  <h2>Your first task takes less time than this page took to load.</h2>
+  <button class="btn3d brass" onclick="location.href='index.html'">Create free account</button>
+</div>
+
+<footer class="site-footer">
+  <span>© 2026 Earning Booster</span>
+  <span>Terms · Privacy · Support</span>
+</footer>
+
+<script src="backdrop.js"></script>
+<script>
+  // Gentle live-ticking balance to reinforce the "live earnings" feel.
+  (function () {
+    const amountEl = document.getElementById("ticker-amount");
+    const todayEl = document.getElementById("ticker-today");
+    let balance = 128.40;
+    let today = 6.35;
+    setInterval(function () {
+      const bump = Math.random() * 0.05;
+      balance += bump;
+      today += bump;
+      amountEl.textContent = balance.toFixed(2);
+      todayEl.textContent = "$" + today.toFixed(2);
+    }, 2600);
+  })();
+</script>
+</body>
+</html>
