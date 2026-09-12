@@ -46,6 +46,7 @@ create table if not exists public.earnings_log (
   user_id uuid references auth.users on delete cascade,
   amount numeric(10,2) not null,
   source text,
+  external_id text unique, -- the offerwall network's transaction id; stops double-crediting on retried postbacks
   created_at timestamp with time zone default now()
 );
 

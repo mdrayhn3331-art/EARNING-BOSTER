@@ -95,6 +95,14 @@
   </div>
 </section>
 
+<section class="section" id="offers">
+  <h2>Available tasks</h2>
+  <p style="margin-top:.6rem;color:var(--paper-dim);max-width:50ch;">
+    Surveys and offers below are supplied by our task partner and update automatically based on your profile and country.
+  </p>
+  <div id="cpx-offerwall" style="margin-top:1.6rem;min-height:420px;border:1px solid var(--line);border-radius:var(--radius-md);overflow:hidden;"></div>
+</section>
+
 <div class="cta-band" id="start">
   <h2>Your first task takes less time than this page took to load.</h2>
   <button class="btn3d brass" onclick="location.href='index.html'">Create free account</button>
@@ -136,9 +144,41 @@
       }
     }
     await refreshBalance();
+    // refresh again periodically — a completed offer credits the balance
+    // via the server-side postback, not this browser tab, so we just re-poll.
+    setInterval(refreshBalance, 15000);
+
+    // ---- CPX Research offerwall ----
+    // 1. Sign up as a publisher at https://www.cpx-research.com
+    // 2. Create an "App" in your dashboard to get CPX_APP_ID
+    // 3. If your account has Secure Hash enabled, paste it below too
+    const CPX_APP_ID = "36123";
+    const CPX_SECURE_HASH = ""; // leave blank if not enabled on your account
+
+    if (CPX_APP_ID && CPX_APP_ID.indexOf("PASTE_") === -1) {
+      const cpxScript = document.createElement("script");
+      cpxScript.src = "https://cdn.cpx-research.com/assets/js/script_tag_v2.0.js";
+      cpxScript.onload = function () {
+        window.config = {
+          general_config: {
+            app_id: CPX_APP_ID,
+            ext_user_id: user.id,
+            secure_hash: CPX_SECURE_HASH,
+          },
+          script_config: [
+            { div_id: "cpx-offerwall", theme_style: 1 },
+          ],
+          useIFrame: true,
+        };
+      };
+      document.body.appendChild(cpxScript);
+    } else {
+      document.getElementById("cpx-offerwall").innerHTML =
+        '<p style="padding:2rem;color:var(--paper-dim);font-size:.9rem;">Task list not configured yet — add your CPX Research App ID in home.html.</p>';
+    }
 
     // Demo button: stands in for "user completed an offerwall task".
-    // Wire this to your real task-completion callback later.
+    // Once the real offerwall + postback are wired, you can remove this.
     demoBtn.addEventListener("click", async function () {
       demoBtn.disabled = true;
       await addEarning(user.id, 0.25, "demo-task");

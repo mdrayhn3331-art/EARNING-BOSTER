@@ -41,10 +41,6 @@ That's the only file you need to edit. Save it.
    balance persists, because it's real data now, not a random animation.
 
 ## What's still needed before this can pay real users
-- **A real task source.** The "+$0.25" button is a stand-in. To pay people
-  for real, integrate an offerwall/affiliate network such as CPX Research,
-  AdGate Media, or OfferToro — they send a "task completed" callback to
-  your server, which then calls the same `addEarning()` function.
 - **A payout method.** PayPal Payouts API, Payoneer, or local mobile
   banking (bKash/Nagad) to actually send money out when a user cashes out.
 - **Legal/compliance check.** Handling other people's money for payouts
@@ -54,10 +50,52 @@ That's the only file you need to edit. Save it.
   Authentication → Providers → Email, if you want instant sign-up without
   the confirmation email step.
 
+## Step 6 — Connect a real task source (CPX Research)
+
+The homepage now has a live task widget and a server-side postback handler.
+Demo-only earning buttons are gone from the real flow — this wires actual
+surveys in.
+
+1. **Sign up as a publisher** at https://www.cpx-research.com and create
+   an "App" in your dashboard. Copy its **App ID**.
+2. **Open `home.html`**, find this block near the bottom, and paste your
+   App ID:
+   ```js
+   const CPX_APP_ID = "PASTE_YOUR_CPX_APP_ID_HERE";
+   ```
+   The offer list will then load automatically inside the "Available
+   tasks" section, matched to each signed-in user (their Supabase user id
+   is passed as `ext_user_id`).
+3. **Deploy the postback handler** so CPX can credit balances on your
+   server, not the browser (this is what stops people from faking
+   "task completed" themselves):
+   ```
+   supabase functions deploy cpx-postback
+   supabase secrets set SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+   ```
+   The service role key is in Supabase → Settings → API — keep it secret,
+   never put it in `supabase-client.js` or any browser-facing file.
+4. **Copy the deployed function's URL** (Supabase prints it after deploy,
+   looks like `https://<project-ref>.functions.supabase.co/cpx-postback`)
+   and paste it into CPX Research → your App → **Postback** tab.
+5. **Check CPX's postback parameter names against the code.** CPX
+   documents its macros per account — open `supabase/functions/cpx-postback/index.ts`
+   and confirm the parameter names (`status`, `trans_id`, `user_id`,
+   `amount_local`) match what's shown in your CPX dashboard's postback
+   tab, adjusting the code if they differ. If your account has
+   "Secure Hash" postback signing enabled, get the exact hashing formula
+   from your CPX account manager and update the `verifyHash()` function —
+   the one included is a reasonable placeholder, not a confirmed formula.
+6. Test end to end: sign in, complete a real (or CPX sandbox) survey,
+   and confirm your balance updates within a few seconds — the page
+   polls for a fresh balance automatically.
+
 ## Files in this project
 - `index.html` — login / sign-up page (now wired to real Supabase auth)
-- `home.html` — dashboard with real balance pulled from the database
+- `home.html` — dashboard with real balance + live CPX Research task widget
 - `style.css` — shared visual design, including the 3D button effect
 - `backdrop.js` — the animated canvas background
 - `supabase-client.js` — **edit this one** with your project keys
 - `supabase-setup.sql` — run this once in Supabase's SQL editor
+- `supabase/functions/cpx-postback/index.ts` — server-side handler that
+  credits real balances when CPX Research confirms a completed task
